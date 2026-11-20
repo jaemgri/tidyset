@@ -3,24 +3,33 @@ import type { Dataset } from "./lib/data";
 import { runRules, type Rule } from "./lib/rules";
 import { FileUpload } from "./components/FileUpload";
 import { ColumnSummary } from "./components/ColumnSummary";
+import { RuleBuilder } from "./components/RuleBuilder";
 import { RuleResults } from "./components/RuleResults";
 import { DataTable } from "./components/DataTable";
 
-// Temporary: fixed rules for customers.csv. The rule builder UI replaces this next.
+// Starter rules for customers.csv, so the demo isn't empty
 const DEMO_RULES: Rule[] = [
   { id: "r1", type: "unique", column: "id" },
   { id: "r2", type: "not_empty", column: "name" },
-  { id: "r3", type: "not_empty", column: "email" },
-  { id: "r4", type: "email", column: "email" },
-  { id: "r5", type: "range", column: "age", min: 0, max: 120 },
-  { id: "r6", type: "not_empty", column: "country" },
+  { id: "r3", type: "email", column: "email" },
+  { id: "r4", type: "range", column: "age", min: 0, max: 120 },
 ];
 
 function App() {
   const [dataset, setDataset] = useState<Dataset | null>(null);
+  const [rules, setRules] = useState<Rule[]>(DEMO_RULES);
 
-  // Derived state: recalculated whenever the dataset changes
-  const results = dataset ? runRules(DEMO_RULES, dataset.rows) : [];
+  function addRule(rule: Rule) {
+    setRules([...rules, rule]); // new array = React knows something changed
+  }
+
+  function deleteRule(ruleId: string) {
+    setRules(rules.filter((r) => r.id !== ruleId));
+  }
+
+  // Only run rules whose column exists in this file
+  const activeRules = dataset ? rules.filter((r) => dataset.columns.includes(r.column)) : [];
+  const results = dataset ? runRules(activeRules, dataset.rows) : [];
   const allFailures = results.flatMap((r) => r.failures);
 
   return (
@@ -37,7 +46,12 @@ function App() {
             {dataset.columns.length} columns
           </p>
           <ColumnSummary columns={dataset.columns} rows={dataset.rows} />
-          <RuleResults results={results} rowCount={dataset.rows.length} />
+          <RuleBuilder key={dataset.fileName} columns={dataset.columns} onAdd={addRule} />
+          <RuleResults
+            results={results}
+            rowCount={dataset.rows.length}
+            onDelete={deleteRule}
+          />
           <DataTable columns={dataset.columns} rows={dataset.rows} failures={allFailures} />
         </>
       )}

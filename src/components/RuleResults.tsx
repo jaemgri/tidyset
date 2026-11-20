@@ -3,15 +3,24 @@ import { describeRule, type RuleResult } from "../lib/rules";
 type RuleResultsProps = {
   results: RuleResult[];
   rowCount: number;
+  onDelete: (ruleId: string) => void;
 };
 
-export function RuleResults({ results, rowCount }: RuleResultsProps) {
+export function RuleResults({ results, rowCount, onDelete }: RuleResultsProps) {
+  if (results.length === 0) {
+    return (
+      <section className="mb-6 rounded-lg border border-dashed p-6 text-center text-sm text-gray-500">
+        No rules yet. Add one above to start checking your data.
+      </section>
+    );
+  }
+
   const failedRows = new Set(results.flatMap((r) => r.failures.map((f) => f.rowIndex)));
   const cleanRows = rowCount - failedRows.size;
   const score = rowCount === 0 ? 100 : Math.round((cleanRows / rowCount) * 100);
 
   const scoreColour =
-  score >= 90 ? "text-green-600" : score >= 60 ? "text-amber-500" : "text-red-600";
+    score >= 90 ? "text-green-600" : score >= 60 ? "text-amber-500" : "text-red-600";
 
   return (
     <section className="mb-6 rounded-lg border p-4">
@@ -31,6 +40,12 @@ export function RuleResults({ results, rowCount }: RuleResultsProps) {
               {failures.length > 0 && (
                 <span className="text-red-600">{failures.length} failing</span>
               )}
+              <button
+                onClick={() => onDelete(rule.id)}
+                className="ml-auto text-xs text-gray-400 hover:text-red-600"
+              >
+                Remove
+              </button>
             </div>
 
             {failures.length > 0 && (
