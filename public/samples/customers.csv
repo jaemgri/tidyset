@@ -1,0 +1,6 @@
+id,name,email,age,country
+1,Aiko Tanaka,aiko@example.com,29,Japan
+2,Ben Clarke,,34,Australia
+3,Chloe Kim,chloe@example,41,Korea
+3,Dan Wu,dan@example.com,-5,
+5,,eve@example.com,220,Japan
