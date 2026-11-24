@@ -14,6 +14,7 @@ import {
   deleteRule,
   listCheckRuns,
   createCheckRun,
+  seedDemoWorkspace,
   toSummary,
   type CheckRun,
   type DatasetSummary,
@@ -29,13 +30,14 @@ import { DataTable } from "./DataTable";
 
 type WorkspaceProps = {
   userEmail: string;
+  isDemo: boolean;
 };
 
 function activeRulesFor(dataset: Dataset, rules: Rule[]) {
   return rules.filter((r) => dataset.columns.includes(r.column));
 }
 
-export function Workspace({ userEmail }: WorkspaceProps) {
+export function Workspace({ userEmail, isDemo }: WorkspaceProps) {
   const [datasets, setDatasets] = useState<DatasetSummary[]>([]);
   const [dataset, setDataset] = useState<SavedDataset | null>(null);
   const [rules, setRules] = useState<Rule[]>([]);
@@ -46,9 +48,17 @@ export function Workspace({ userEmail }: WorkspaceProps) {
     setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
   }
 
+  // On load: seed the demo if needed, then fetch datasets.
+  // In the demo, open the first dataset straight away.
   useEffect(() => {
-    listDatasets().then(setDatasets).catch(showError);
-  }, []);
+    async function load() {
+      if (isDemo) await seedDemoWorkspace();
+      const list = await listDatasets();
+      setDatasets(list);
+      if (isDemo && list.length > 0) await handleSelect(list[0].id);
+    }
+    load().catch(showError);
+  }, [isDemo]);
 
   function handleNew() {
     setDataset(null);
@@ -110,6 +120,7 @@ export function Workspace({ userEmail }: WorkspaceProps) {
     try {
       await createRule(dataset.id, rule);
       setRules((prev) => [...prev, rule]);
+      setError(null);
     } catch (e) {
       showError(e);
     }
@@ -185,20 +196,44 @@ export function Workspace({ userEmail }: WorkspaceProps) {
           />
         </div>
         <div className="border-t px-5 py-4 text-sm">
-          <p className="truncate text-muted">{userEmail}</p>
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="mt-0.5 font-medium underline-offset-4 hover:underline"
-          >
-            Log out
-          </button>
+          {isDemo ? (
+            <>
+              <p className="font-medium">Demo workspace</p>
+              <button
+                onClick={() => supabase.auth.signOut()}
+                className="mt-0.5 text-muted underline-offset-4 hover:text-ink hover:underline"
+              >
+                Exit demo
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="truncate text-muted">{userEmail}</p>
+              <button
+                onClick={() => supabase.auth.signOut()}
+                className="mt-0.5 font-medium underline-offset-4 hover:underline"
+              >
+                Log out
+              </button>
+            </>
+          )}
         </div>
       </aside>
 
       <main className="min-w-0 px-5 py-8 md:px-10 md:py-10">
         <div className="max-w-5xl">
+          {isDemo && (
+            <p className="mb-8 rounded-lg border bg-white px-4 py-3 text-sm">
+              You're exploring a demo workspace with sample data. Try adding a rule, or upload a
+              new version of a dataset. Everything resets when you exit the demo.
+            </p>
+          )}
+
           {error && (
-            <p role="alert" className="mb-6 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            <p
+              role="alert"
+              className="mb-6 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+            >
               {error}
             </p>
           )}

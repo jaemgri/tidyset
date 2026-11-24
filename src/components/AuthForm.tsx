@@ -29,6 +29,17 @@ export function AuthForm() {
     setSubmitting(false);
   }
 
+  async function handleDemo() {
+    setSubmitting(true);
+    setError(null);
+    // Creates a temporary account. The workspace seeds itself once it loads.
+    const { error } = await supabase.auth.signInAnonymously();
+    if (error) {
+      setError(error.message);
+      setSubmitting(false);
+    }
+  }
+
   const inputClass = "mt-1.5 h-10 w-full rounded-md border bg-white px-3 text-ink";
 
   return (
@@ -100,6 +111,19 @@ export function AuthForm() {
               {mode === "signIn" ? "Create an account" : "Log in"}
             </button>
           </p>
+
+          <div className="mt-8 border-t pt-8">
+            <button
+              onClick={handleDemo}
+              disabled={submitting}
+              className="h-10 w-full rounded-md border bg-white font-medium hover:bg-paper disabled:opacity-50"
+            >
+              Try the demo
+            </button>
+            <p className="mt-2 text-center text-sm text-muted">
+              No sign-up. Explore a workspace with sample data.
+            </p>
+          </div>
         </div>
       </main>
 

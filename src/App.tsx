@@ -13,7 +13,12 @@ function App() {
     return <AuthForm />;
   }
 
-  return <Workspace userEmail={session.user.email ?? ""} />;
+  return (
+    <Workspace
+      userEmail={session.user.email ?? ""}
+      isDemo={session.user.is_anonymous ?? false}
+    />
+  );
 }
 
 export default App;

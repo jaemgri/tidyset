@@ -197,3 +197,10 @@ export async function updateDatasetData(id: string, dataset: Dataset): Promise<v
     .eq("id", id);
   if (error) throw new Error(error.message);
 }
+
+// ---- Demo ----
+
+export async function seedDemoWorkspace(): Promise<void> {
+  const { error } = await supabase.rpc("seed_demo_workspace");
+  if (error) throw new Error(error.message);
+}
