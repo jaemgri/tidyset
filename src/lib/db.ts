@@ -118,3 +118,82 @@ export async function deleteRule(id: string): Promise<void> {
   const { error } = await supabase.from("rules").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
+
+// ---- Check runs ----
+
+export type CheckRun = {
+  id: string;
+  createdAt: string;
+  score: number;
+  cleanRows: number;
+  totalRows: number;
+  ruleCount: number;
+  ruleResults: { description: string; failures: number }[];
+};
+
+type CheckRunRecord = {
+  id: string;
+  created_at: string;
+  score: number;
+  clean_rows: number;
+  total_rows: number;
+  rule_count: number;
+  rule_results: { description: string; failures: number }[];
+};
+
+const CHECK_RUN_COLUMNS = "id, created_at, score, clean_rows, total_rows, rule_count, rule_results";
+
+function toCheckRun(r: CheckRunRecord): CheckRun {
+  return {
+    id: r.id,
+    createdAt: r.created_at,
+    score: r.score,
+    cleanRows: r.clean_rows,
+    totalRows: r.total_rows,
+    ruleCount: r.rule_count,
+    ruleResults: r.rule_results,
+  };
+}
+
+export async function listCheckRuns(datasetId: string): Promise<CheckRun[]> {
+  const { data, error } = await supabase
+    .from("check_runs")
+    .select(CHECK_RUN_COLUMNS)
+    .eq("dataset_id", datasetId)
+    .order("created_at");
+  if (error) throw new Error(error.message);
+  return (data as CheckRunRecord[]).map(toCheckRun);
+}
+
+export async function createCheckRun(
+  datasetId: string,
+  run: Omit<CheckRun, "id" | "createdAt">,
+): Promise<CheckRun> {
+  const { data, error } = await supabase
+    .from("check_runs")
+    .insert({
+      dataset_id: datasetId,
+      score: run.score,
+      clean_rows: run.cleanRows,
+      total_rows: run.totalRows,
+      rule_count: run.ruleCount,
+      rule_results: run.ruleResults,
+    })
+    .select(CHECK_RUN_COLUMNS)
+    .single();
+  if (error) throw new Error(error.message);
+  return toCheckRun(data as CheckRunRecord);
+}
+
+// Replace a dataset's data with a new version (rules and history are kept)
+export async function updateDatasetData(id: string, dataset: Dataset): Promise<void> {
+  const { error } = await supabase
+    .from("datasets")
+    .update({
+      column_names: dataset.columns,
+      row_data: dataset.rows,
+      row_count: dataset.rows.length,
+    })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}

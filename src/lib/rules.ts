@@ -91,3 +91,10 @@ function checkRule(rule: Rule, rows: Row[]): Failure[] {
 export function runRules(rules: Rule[], rows: Row[]): RuleResult[] {
   return rules.map((rule) => ({ rule, failures: checkRule(rule, rows) }));
 }
+
+export function summarise(results: RuleResult[], rowCount: number) {
+  const failedRows = new Set(results.flatMap((r) => r.failures.map((f) => f.rowIndex)));
+  const cleanRows = rowCount - failedRows.size;
+  const score = rowCount === 0 ? 100 : Math.round((cleanRows / rowCount) * 100);
+  return { score, cleanRows, totalRows: rowCount };
+}

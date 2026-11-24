@@ -5,14 +5,24 @@ type DatasetListProps = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  onNew: () => void;
 };
 
-export function DatasetList({ datasets, selectedId, onSelect, onDelete }: DatasetListProps) {
+export function DatasetList({ datasets, selectedId, onSelect, onDelete, onNew }: DatasetListProps) {
   return (
     <aside>
       <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
         Your datasets
       </h2>
+
+      <button
+        onClick={onNew}
+        className={`mb-3 w-full rounded border px-2 py-1.5 text-left text-sm hover:bg-gray-50 ${
+          selectedId === null ? "border-gray-900 font-medium" : ""
+        }`}
+      >
+        + New dataset
+      </button>
 
       {datasets.length === 0 ? (
         <p className="text-sm text-gray-400">Nothing saved yet.</p>

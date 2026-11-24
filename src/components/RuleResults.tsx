@@ -1,4 +1,4 @@
-import { describeRule, type RuleResult } from "../lib/rules";
+import { describeRule, summarise, type RuleResult } from "../lib/rules";
 
 type RuleResultsProps = {
   results: RuleResult[];
@@ -15,9 +15,7 @@ export function RuleResults({ results, rowCount, onDelete }: RuleResultsProps) {
     );
   }
 
-  const failedRows = new Set(results.flatMap((r) => r.failures.map((f) => f.rowIndex)));
-  const cleanRows = rowCount - failedRows.size;
-  const score = rowCount === 0 ? 100 : Math.round((cleanRows / rowCount) * 100);
+  const { score, cleanRows } = summarise(results, rowCount);
 
   const scoreColour =
     score >= 90 ? "text-green-600" : score >= 60 ? "text-amber-500" : "text-red-600";
