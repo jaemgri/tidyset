@@ -6,7 +6,6 @@ type RuleType = Rule["type"];
 
 const ALL_KINDS: ColumnKind[] = ["number", "email", "date", "text"];
 
-// Which rules make sense for which kind of column
 const RULE_TYPES: { value: RuleType; label: string; kinds: ColumnKind[] }[] = [
   { value: "not_empty", label: "is never empty", kinds: ALL_KINDS },
   { value: "unique", label: "is unique", kinds: ALL_KINDS },
@@ -26,7 +25,6 @@ export function RuleBuilder({ columns, rows, onAdd }: RuleBuilderProps) {
   const [min, setMin] = useState("");
   const [max, setMax] = useState("");
 
-  // Derived: the kind of each column, and the rules allowed for the selected one
   const kinds = Object.fromEntries(columns.map((c) => [c, inferColumnKind(rows, c)]));
   const allowedTypes = RULE_TYPES.filter((t) => t.kinds.includes(kinds[column]));
 
@@ -58,7 +56,7 @@ export function RuleBuilder({ columns, rows, onAdd }: RuleBuilderProps) {
     setMax("");
   }
 
-  const inputClass = "h-8 rounded border bg-white px-2";
+  const inputClass = "h-9 rounded-md border bg-white px-2.5";
 
   return (
     <form
@@ -66,11 +64,12 @@ export function RuleBuilder({ columns, rows, onAdd }: RuleBuilderProps) {
         e.preventDefault();
         addRule();
       }}
-      className="mb-6 flex flex-wrap items-center gap-2 rounded-lg border bg-gray-50 p-4 text-sm"
+      className="flex flex-wrap items-center gap-2 text-sm"
     >
-      <span className="font-medium">Add rule:</span>
+      <span className="mr-1 font-medium">Add a rule</span>
 
       <select
+        aria-label="Column"
         value={column}
         onChange={(e) => handleColumnChange(e.target.value)}
         className={inputClass}
@@ -83,6 +82,7 @@ export function RuleBuilder({ columns, rows, onAdd }: RuleBuilderProps) {
       </select>
 
       <select
+        aria-label="Rule"
         value={type}
         onChange={(e) => setType(e.target.value as RuleType)}
         className={inputClass}
@@ -98,27 +98,29 @@ export function RuleBuilder({ columns, rows, onAdd }: RuleBuilderProps) {
         <>
           <input
             type="number"
+            aria-label="Minimum"
             placeholder="min"
             value={min}
             onChange={(e) => setMin(e.target.value)}
-            className={`${inputClass} w-20`}
+            className={`${inputClass} w-24`}
           />
-          <span>and</span>
+          <span className="text-muted">and</span>
           <input
             type="number"
+            aria-label="Maximum"
             placeholder="max"
             value={max}
             onChange={(e) => setMax(e.target.value)}
-            className={`${inputClass} w-20`}
+            className={`${inputClass} w-24`}
           />
         </>
       )}
 
       <button
         type="submit"
-        className="h-8 rounded bg-gray-900 px-3 font-medium text-white hover:bg-gray-700"
+        className="h-9 rounded-md bg-ink px-3.5 font-medium text-white hover:bg-ink-soft"
       >
-        Add
+        Add rule
       </button>
     </form>
   );

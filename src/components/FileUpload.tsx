@@ -23,7 +23,7 @@ export function FileUpload({ onLoad }: FileUploadProps) {
 
   function handleFile(file: File) {
     if (!file.name.toLowerCase().endsWith(".csv")) {
-      setError("Please choose a .csv file");
+      setError("That isn't a CSV file. Choose a file ending in .csv.");
       return;
     }
     setError(null);
@@ -36,7 +36,7 @@ export function FileUpload({ onLoad }: FileUploadProps) {
   async function loadSample() {
     const response = await fetch("/samples/customers.csv");
     if (!response.ok) {
-      setError("Couldn't load the sample file");
+      setError("The sample file couldn't be loaded. Try again.");
       return;
     }
     const text = await response.text();
@@ -46,31 +46,39 @@ export function FileUpload({ onLoad }: FileUploadProps) {
   }
 
   return (
-    <div className="mb-6">
+    <div className="mb-8">
       <div
+        role="button"
+        tabIndex={0}
         onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         onDragOver={(e) => {
-          e.preventDefault(); // allow dropping
+          e.preventDefault();
           setIsDragging(true);
         }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={(e) => {
-          e.preventDefault(); // stop the browser opening the file
+          e.preventDefault();
           setIsDragging(false);
           const file = e.dataTransfer.files[0];
           if (file) handleFile(file);
         }}
-        className={`cursor-pointer rounded-lg border-2 border-dashed p-10 text-center transition ${
-          isDragging
-            ? "border-gray-900 bg-gray-100"
-            : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-16 text-center transition-colors ${
+          isDragging ? "border-ink bg-white" : "bg-white/60 hover:border-muted hover:bg-white"
         }`}
       >
-        <p className="font-medium">Drop a CSV here, or click to browse</p>
-        <p className="mt-1 text-sm text-gray-500">Saved privately to your account.</p>
+        <p className="text-base font-medium">Drop a CSV file here</p>
+        <p className="mt-1 text-sm text-muted">
+          or <span className="text-ink underline underline-offset-4">browse your computer</span>.
+          It's saved privately to your account.
+        </p>
       </div>
 
-      {/* Hidden real file input: the box above "clicks" it for us */}
       <input
         ref={inputRef}
         type="file"
@@ -79,19 +87,23 @@ export function FileUpload({ onLoad }: FileUploadProps) {
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleFile(file);
-          e.target.value = ""; // lets you re-upload the same file
+          e.target.value = "";
         }}
       />
 
-      <div className="mt-2 flex items-center justify-between text-sm">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
         <button
           type="button"
           onClick={loadSample}
-          className="text-gray-600 underline hover:text-gray-900"
+          className="font-medium underline underline-offset-4"
         >
-          No CSV handy? Load sample data
+          Try it with sample data
         </button>
-        {error && <span className="text-red-600">{error}</span>}
+        {error && (
+          <span role="alert" className="text-red-700">
+            {error}
+          </span>
+        )}
       </div>
     </div>
   );

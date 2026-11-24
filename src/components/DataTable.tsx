@@ -7,51 +7,70 @@ type DataTableProps = {
   failures: Failure[];
 };
 
+const MAX_ROWS = 50;
+
 export function DataTable({ columns, rows, failures }: DataTableProps) {
-  // "rowIndex:column" -> list of failure messages for that cell
+  // "rowIndex:column" -> why that cell failed
   const failureMap = new Map<string, string[]>();
   for (const f of failures) {
     const key = `${f.rowIndex}:${f.column}`;
     failureMap.set(key, [...(failureMap.get(key) ?? []), f.message]);
   }
 
+  const emptyCounts = Object.fromEntries(
+    columns.map((col) => [col, rows.filter((row) => isEmpty(row[col])).length]),
+  );
+
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="min-w-full text-sm">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-3 py-2 text-left font-semibold text-gray-400">#</th>
-            {columns.map((col) => (
-              <th key={col} className="px-3 py-2 text-left font-semibold">
-                {col}
+    <div className="overflow-hidden rounded-xl border bg-white">
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead className="border-b bg-paper/60 text-left">
+            <tr>
+              <th scope="col" className="w-12 px-4 py-3 align-top text-xs font-medium text-muted">
+                #
               </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.slice(0, 50).map((row, i) => (
-            <tr key={i} className="border-t">
-              <td className="px-3 py-2 text-gray-400">{i + 1}</td>
-              {columns.map((col) => {
-                const messages = failureMap.get(`${i}:${col}`);
-                return (
-                  <td
-                    key={col}
-                    title={messages?.join(", ")}
-                    className={`px-3 py-2 ${messages ? "bg-red-50 text-red-600" : ""}`}
-                  >
-                    {isEmpty(row[col]) ? (
-                      <span className="italic text-gray-400">empty</span>
-                    ) : (
-                      row[col]
-                    )}
-                  </td>
-                );
-              })}
+              {columns.map((col) => (
+                <th key={col} scope="col" className="px-4 py-3 align-top">
+                  <span className="block font-medium">{col}</span>
+                  <span className="block text-xs font-normal text-muted">
+                    {emptyCounts[col] === 0 ? "No empty cells" : `${emptyCounts[col]} empty`}
+                  </span>
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="font-mono text-[13px]">
+            {rows.slice(0, MAX_ROWS).map((row, i) => (
+              <tr key={i} className="border-t first:border-t-0 hover:bg-paper/50">
+                <td className="px-4 py-2.5 text-muted tabular-nums">{i + 1}</td>
+                {columns.map((col) => {
+                  const messages = failureMap.get(`${i}:${col}`);
+                  const content = isEmpty(row[col]) ? (
+                    <span className={`font-sans italic ${messages ? "" : "text-muted"}`}>empty</span>
+                  ) : (
+                    row[col]
+                  );
+                  return (
+                    <td
+                      key={col}
+                      title={messages?.join(", ")}
+                      className="whitespace-nowrap px-4 py-2.5"
+                    >
+                      {messages ? <span className="marker">{content}</span> : content}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > MAX_ROWS && (
+        <p className="border-t px-4 py-2.5 text-xs text-muted">
+          Showing the first {MAX_ROWS} of {rows.length} rows.
+        </p>
+      )}
     </div>
   );
 }

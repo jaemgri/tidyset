@@ -16,8 +16,11 @@ type RunHistoryProps = {
   onNewVersion: (file: File) => void;
 };
 
-const LINE_COLOUR = "#2a78d6";
-const AXIS_TEXT = { fontSize: 12, fill: "#6b7280" };
+// Match the design tokens in index.css
+const INK = "#1b2333";
+const MUTED = "#5e6778";
+const LINE = "#e1e5eb";
+const AXIS_TEXT = { fontSize: 12, fill: MUTED, fontFamily: "IBM Plex Sans" };
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -35,21 +38,27 @@ export function RunHistory({ runs, canRecord, onRecord, onNewVersion }: RunHisto
   const previous = runs.at(-2);
   const change = latest && previous ? latest.score - previous.score : null;
 
-  return (
-    <section className="mb-6 rounded-lg border p-4">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-semibold">Quality over time</h2>
-          {change !== null && (
-            <p className="text-sm text-gray-500">
-              {change === 0 ? "No change" : `${change > 0 ? "▲ +" : "▼ "}${change} pts`} since the
-              previous check
-            </p>
-          )}
-        </div>
+  let summary: string;
+  if (change !== null) {
+    summary =
+      change === 0
+        ? "No change since the previous check."
+        : `${change > 0 ? "▲ Up" : "▼ Down"} ${Math.abs(change)} points since the previous check.`;
+  } else if (runs.length === 1) {
+    summary = "One check recorded. Upload a new version of the data to see the trend.";
+  } else if (canRecord) {
+    summary = "Record a check to save today's score.";
+  } else {
+    summary = "Add a rule, then record a check to start tracking quality.";
+  }
 
-        <div className="flex items-center gap-3 text-sm">
-          <label className="cursor-pointer text-gray-600 underline hover:text-gray-900">
+  return (
+    <div className="rounded-xl border bg-white p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted">{summary}</p>
+
+        <div className="flex items-center gap-2 text-sm">
+          <label className="flex h-9 cursor-pointer items-center rounded-md border px-3 font-medium hover:bg-paper">
             Upload new version
             <input
               type="file"
@@ -66,31 +75,23 @@ export function RunHistory({ runs, canRecord, onRecord, onNewVersion }: RunHisto
             onClick={onRecord}
             disabled={!canRecord}
             title={canRecord ? undefined : "Add at least one rule first"}
-            className="h-8 rounded bg-gray-900 px-3 font-medium text-white hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-9 rounded-md bg-ink px-3.5 font-medium text-white hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-40"
           >
             Record check
           </button>
         </div>
       </div>
 
-      {runs.length < 2 ? (
-        <p className="text-sm text-gray-500">
-          {runs.length === 0
-            ? canRecord
-              ? "No checks recorded yet. Click “Record check” to save today's score."
-              : "Add a rule, then record a check to start tracking quality over time."
-            : "One check recorded. Upload a new version of the data to see the trend."}
-        </p>
-      ) : (
-        <div className="h-52">
+      {runs.length >= 2 && (
+        <div className="mt-6 h-52">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: -8 }}>
-              <CartesianGrid stroke="#e5e7eb" vertical={false} />
+              <CartesianGrid stroke={LINE} vertical={false} />
               <XAxis
                 dataKey="label"
                 tick={AXIS_TEXT}
                 tickLine={false}
-                axisLine={{ stroke: "#d1d5db" }}
+                axisLine={{ stroke: LINE }}
                 interval="preserveStartEnd"
                 minTickGap={24}
               />
@@ -105,14 +106,20 @@ export function RunHistory({ runs, canRecord, onRecord, onNewVersion }: RunHisto
               />
               <Tooltip
                 formatter={(value) => [`${value}%`, "Quality score"]}
-                cursor={{ stroke: "#9ca3af", strokeDasharray: "3 3" }}
+                cursor={{ stroke: MUTED, strokeDasharray: "3 3" }}
+                contentStyle={{
+                  borderRadius: 8,
+                  border: `1px solid ${LINE}`,
+                  fontFamily: "IBM Plex Sans",
+                  fontSize: 13,
+                }}
               />
               <Line
                 type="linear"
                 dataKey="score"
-                stroke={LINE_COLOUR}
+                stroke={INK}
                 strokeWidth={2}
-                dot={{ r: 4, fill: LINE_COLOUR, stroke: "#fff", strokeWidth: 2 }}
+                dot={{ r: 4, fill: INK, stroke: "#fff", strokeWidth: 2 }}
                 activeDot={{ r: 6 }}
                 isAnimationActive={false}
               />
@@ -122,32 +129,32 @@ export function RunHistory({ runs, canRecord, onRecord, onNewVersion }: RunHisto
       )}
 
       {runs.length > 0 && (
-        <table className="mt-4 w-full text-sm">
-          <thead className="text-left text-gray-500">
+        <table className="mt-5 w-full text-sm">
+          <thead className="text-left text-xs text-muted">
             <tr>
-              <th className="py-1 font-medium">When</th>
-              <th className="py-1 font-medium">Score</th>
-              <th className="py-1 font-medium">Clean rows</th>
-              <th className="py-1 font-medium">Rules</th>
+              <th className="pb-2 font-medium">When</th>
+              <th className="pb-2 font-medium">Score</th>
+              <th className="pb-2 font-medium">Clean rows</th>
+              <th className="pb-2 font-medium">Rules</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="tabular-nums">
             {[...runs]
               .reverse()
               .slice(0, 5)
               .map((r) => (
                 <tr key={r.id} className="border-t">
-                  <td className="py-1.5">{formatTime(r.createdAt)}</td>
-                  <td className="py-1.5 font-medium">{r.score}%</td>
-                  <td className="py-1.5">
-                    {r.cleanRows}/{r.totalRows}
+                  <td className="py-2">{formatTime(r.createdAt)}</td>
+                  <td className="py-2 font-medium">{r.score}%</td>
+                  <td className="py-2">
+                    {r.cleanRows} of {r.totalRows}
                   </td>
-                  <td className="py-1.5">{r.ruleCount}</td>
+                  <td className="py-2">{r.ruleCount}</td>
                 </tr>
               ))}
           </tbody>
         </table>
       )}
-    </section>
+    </div>
   );
 }

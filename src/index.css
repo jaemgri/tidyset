@@ -1,1 +1,54 @@
 @import "tailwindcss";
+@import "tailwindcss";
+
+/* Design tokens: these become Tailwind classes like bg-paper, text-ink, bg-marker */
+/* css-lint: unknownAtRules: ignore */
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-paper: #f4f6f8;
+  --color-ink: #1b2333;
+  --color-ink-soft: #2c374d;
+  --color-muted: #5e6778;
+  --color-line: #e1e5eb;
+  --color-marker: #ffd84d;
+  --color-pass: #1e7f68;
+  --color-pass-soft: #e3f3ee;
+}
+
+@layer base {
+  /* Tailwind v4 borders default to the text colour. Make them soft instead. */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-line);
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+}
+
+/* The highlighter pen: slightly uneven edges, like a real marker swipe */
+@layer utilities {
+  .marker {
+    background-color: var(--color-marker);
+    border-radius: 0.15em 0.45em 0.2em 0.4em;
+    padding: 0.05em 0.35em;
+    margin: 0 -0.35em;
+    box-decoration-break: clone;
+  }
+}

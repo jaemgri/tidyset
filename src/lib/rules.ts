@@ -98,3 +98,12 @@ export function summarise(results: RuleResult[], rowCount: number) {
   const score = rowCount === 0 ? 100 : Math.round((cleanRows / rowCount) * 100);
   return { score, cleanRows, totalRows: rowCount };
 }
+
+// True if two rules check the same thing (ignores the id)
+export function isSameRule(a: Rule, b: Rule): boolean {
+  if (a.type !== b.type || a.column !== b.column) return false;
+  if (a.type === "range" && b.type === "range") {
+    return a.min === b.min && a.max === b.max;
+  }
+  return true;
+}
