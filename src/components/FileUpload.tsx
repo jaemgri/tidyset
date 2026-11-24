@@ -67,7 +67,7 @@ export function FileUpload({ onLoad }: FileUploadProps) {
         }`}
       >
         <p className="font-medium">Drop a CSV here, or click to browse</p>
-        <p className="mt-1 text-sm text-gray-500">Your data stays in your browser.</p>
+        <p className="mt-1 text-sm text-gray-500">Saved privately to your account.</p>
       </div>
 
       {/* Hidden real file input: the box above "clicks" it for us */}
